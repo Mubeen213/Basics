@@ -333,6 +333,96 @@ This system ensures that:
 - Nobody else can read the data (confidentiality)
 - The data can't be tampered with undetectably (integrity)
 
+
+## Key Concepts in DynamoDB:
+- Tables: Collections of items, similar to tables in traditional databases.
+- Items: Individual records in a table, akin to rows in relational databases.
+- Attributes: Data fields within an item, like columns in relational databases.
+- Primary Key: Defines how items are uniquely identified in a table. DynamoDB supports two types of primary keys:
+- Partition Key: A single attribute used to distribute data.
+- Composite Key: A combination of a partition key and a sort key.
+
+
+### 1. **Partition Key and Sort Key**
+   - **Partition Key**: This is a single attribute (e.g., UserID) used to uniquely identify each item in the DynamoDB table. DynamoDB uses this key to distribute items across partitions, providing high availability and scalability.
+   - **Sort Key**: When you use a composite primary key (partition key + sort key), the sort key is used to allow multiple items with the same partition key but different sort keys. This is useful for use cases like time-series data.
+
+   **Interview Question**:  
+   *"What’s the difference between a partition key and a sort key, and how do they impact data distribution?"*
+
+   **Answer**:  
+   *"The partition key is used by DynamoDB to determine the partition in which the data will be stored. A partition key alone ensures uniqueness for each item in the table. However, if you add a sort key, it allows multiple items with the same partition key but with a different sort key. This enables efficient querying of items with the same partition key but ordered or filtered by the sort key. Partition keys help distribute data across partitions, while sort keys allow for more fine-grained access patterns within each partition."*
+
+### 2. **Provisioned Throughput and On-Demand Mode**
+   - **Provisioned Throughput**: You manually specify the read and write capacity for your DynamoDB table. This approach can be cost-effective if your workload is predictable.
+   - **On-Demand Mode**: DynamoDB automatically scales the read/write capacity based on traffic. This is useful for unpredictable workloads but can be more expensive if not optimized.
+
+   **Interview Question**:  
+   *"What are the differences between provisioned and on-demand capacity in DynamoDB, and when would you use each?"*
+
+   **Answer**:  
+   *"Provisioned throughput requires you to manually set the amount of read and write capacity, making it ideal for predictable workloads where traffic patterns are well understood, as it helps in cost optimization. On-demand mode, on the other hand, dynamically adjusts to handle incoming traffic without any need for manual intervention, which is ideal for applications with unpredictable or spiky traffic patterns. It eliminates the risk of over-provisioning or under-provisioning but can be more expensive for sustained high throughput workloads."*
+
+### 3. **Global Secondary Index (GSI) and Local Secondary Index (LSI)**
+   - **Global Secondary Index (GSI)**: An index that lets you query on non-primary key attributes. The GSI can have a different partition key and sort key than the main table, offering flexibility in querying.
+   - **Local Secondary Index (LSI)**: Allows querying based on an alternate sort key while using the same partition key as the main table. You can only create LSIs when you create the table, and they provide a different way to sort data within partitions.
+
+   **Interview Question**:  
+   *"Can you explain the difference between a Global Secondary Index (GSI) and a Local Secondary Index (LSI), and when would you use each?"*
+
+   **Answer**:  
+   *"A Global Secondary Index (GSI) allows querying on non-primary key attributes and can have a different partition key and sort key than the main table. It provides flexibility in querying patterns. A Local Secondary Index (LSI) allows you to query within the same partition key but sort the data using a different attribute (sort key). You would use an LSI when you need to sort or query data within the same partition by different attributes. GSIs are more flexible because they don’t require the same partition key as the base table, whereas LSIs must share the partition key with the base table and can only be defined at table creation."*
+
+### 4. **Consistency Models**
+   - **Eventually Consistent Reads**: By default, DynamoDB provides eventually consistent reads, which means the data returned by a read operation might not reflect the results of a recently completed write.
+   - **Strongly Consistent Reads**: You can request strongly consistent reads, ensuring that the most up-to-date data is returned. However, strong consistency may come at the cost of higher latency.
+
+   **Interview Question**:  
+   *"What’s the difference between eventually consistent reads and strongly consistent reads, and in what scenarios would you choose one over the other?"*
+
+   **Answer**:  
+   *"Eventually consistent reads allow for higher throughput but may return stale data since the latest write operation might not be reflected immediately. Eventually consistent reads are typically sufficient for scenarios where absolute freshness isn't critical, such as read-heavy workloads where performance is prioritized. Strongly consistent reads ensure that the data returned is the most up-to-date, but they may result in higher read latency and lower throughput. Strong consistency is necessary for use cases where data accuracy is paramount, like banking or inventory management systems where the latest updates must always be reflected."*
+
+### 5. **Streams and DynamoDB Triggers**
+   - **DynamoDB Streams**: Streams capture changes in DynamoDB tables (insert, update, and delete events) and allow you to trigger downstream processes, often used in event-driven architectures.
+   - **Triggers**: You can use AWS Lambda with DynamoDB Streams to automatically execute some logic when a table is updated, like pushing updates to another service or triggering alerts.
+
+   **Interview Question**:  
+   *"What are DynamoDB Streams, and how can you use them in a real-world application?"*
+
+   **Answer**:  
+   *"DynamoDB Streams capture a time-ordered sequence of item-level changes in a table. This stream can be used to capture insert, update, and delete events. A common use case for Streams is to implement an event-driven architecture where changes to data in DynamoDB trigger downstream processing, such as updating another database, sending notifications, or syncing with external systems. AWS Lambda can be integrated with DynamoDB Streams to create 'triggers' that automatically execute a function when data changes in the table."*
+
+### 6. **DAX (DynamoDB Accelerator)**
+   - **DAX**: It is a fully managed, in-memory caching layer that can reduce read latency for DynamoDB tables to microseconds without requiring application changes. It’s especially useful for read-heavy workloads.
+
+   **Interview Question**:  
+   *"What is DAX in DynamoDB, and how does it improve performance?"*
+
+   **Answer**:  
+   *"DAX (DynamoDB Accelerator) is an in-memory caching layer for DynamoDB. It provides microsecond response times for read-heavy applications by caching data and reducing the number of read requests sent directly to DynamoDB. It’s especially beneficial for applications with a high read-to-write ratio or scenarios where low-latency reads are essential, such as gaming leaderboards, social media feeds, or recommendation engines. DAX is fully integrated with DynamoDB and can be enabled without changing the application logic."*
+
+### 7. **Auto Scaling**
+   - **Auto Scaling**: DynamoDB provides automatic scaling based on the traffic to your table. You can set up scaling policies to automatically adjust the read and write capacity to maintain performance.
+
+   **Interview Question**:  
+   *"How does auto-scaling work in DynamoDB, and what benefits does it provide?"*
+
+   **Answer**:  
+   *"Auto-scaling in DynamoDB automatically adjusts the read and write capacity of your tables based on traffic. You can define scaling policies that set the minimum and maximum capacity units. When traffic increases, DynamoDB scales up the provisioned throughput to handle the additional load, and when traffic decreases, it scales down to reduce costs. This ensures that the table always has sufficient capacity to handle traffic spikes while minimizing over-provisioning and reducing operational overhead. Auto-scaling is particularly useful for applications with unpredictable or cyclical traffic patterns."*
+
+### 8. **TTL (Time to Live)**
+   - **Time to Live (TTL)**: This feature allows you to automatically delete items after a certain period, helping manage space and reduce costs for data that is no longer relevant.
+
+   **Interview Question**:  
+   *"What is TTL in DynamoDB, and how would you use it in an application?"*
+
+   **Answer**:  
+   *"TTL (Time to Live) in DynamoDB allows you to define an expiration time for items, after which they are automatically deleted from the table. TTL is useful for managing data lifecycles, such as expiring session tokens, cleaning up old logs, or removing temporary data in a time-series application. It helps reduce storage costs by ensuring that stale data is automatically removed from the table without manual intervention."*
+
+### Conclusion:
+In an interview, it’s important to focus on explaining not just the functionality but also the **use cases** and **trade-offs** of each DynamoDB feature. Be ready to provide **real-world examples** and articulate the scenarios in which you'd choose DynamoDB over its alternatives. Highlight its **strengths** in terms of scalability, performance, and seamless integration with AWS, while acknowledging its limitations like query flexibility and potential costs.
+
 By using this complex system of cryptography and key exchange, HTTPS provides a secure method for transmitting sensitive data over the internet, protecting against various types of attacks and ensuring privacy for users.
 
 
